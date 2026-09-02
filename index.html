@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>かな — Hiragana e Katakana</title>
+<meta name="description" content="App para memorizar hiragana e katakana com repetição espaçada, prática ativa e anotações com dicas. Funciona offline, sem login.">
+<meta name="theme-color" content="#faf8f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131218" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="かな">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="app">
+  <header class="topo">
+    <button class="voltar" id="voltar" type="button" aria-label="Voltar" hidden>←</button>
+    <h1 id="titulo"><span class="marca">かな</span></h1>
+    <div id="acao-topo"></div>
+  </header>
+
+  <main id="tela" class="tela"></main>
+
+  <p class="rodape-app">Progresso salvo só neste navegador · funciona offline</p>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="js/ui/dom.js"></script>
+<script src="js/data/kana.js"></script>
+<script src="js/data/confusions.js"></script>
+<script src="js/data/songs.js"></script>
+<script src="js/core/store.js"></script>
+<script src="js/core/srs.js"></script>
+<script src="js/core/speech.js"></script>
+<script src="js/core/quiz.js"></script>
+<script src="js/core/tips.js"></script>
+<script src="js/core/ai.js"></script>
+<script src="js/screens/home.js"></script>
+<script src="js/screens/chart.js"></script>
+<script src="js/screens/study.js"></script>
+<script src="js/screens/practice.js"></script>
+<script src="js/screens/notes.js"></script>
+<script src="js/screens/songs.js"></script>
+<script src="js/screens/chat.js"></script>
+<script src="js/screens/progress.js"></script>
+<script src="js/screens/settings.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

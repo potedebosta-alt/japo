@@ -1,0 +1,28 @@
+{
+  "name": "かな — Hiragana e Katakana",
+  "short_name": "かな",
+  "description": "Memorize hiragana e katakana com repetição espaçada, prática ativa e anotações. Funciona offline, sem login.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf8f4",
+  "theme_color": "#faf8f4",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "maskable"
+    }
+  ]
+}

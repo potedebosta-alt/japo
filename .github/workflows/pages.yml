@@ -1,0 +1,48 @@
+# Publica a raiz do repositório no GitHub Pages.
+# Não há build: o app é HTML, CSS e JS estáticos.
+# Para ligar: Settings -> Pages -> Source: GitHub Actions.
+name: Publicar no GitHub Pages
+
+on:
+  push:
+    branches:
+      - claude/novo-app-fyjqfx
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Uma publicação por vez; nunca cancela uma que já está no ar.
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Empacotar o site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar o Pages
+        uses: actions/configure-pages@v5
+
+      - name: Enviar a raiz como artefato
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+  deploy:
+    name: Publicar
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicar no Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
