@@ -1,8 +1,12 @@
 /* Service worker — deixa o app abrir offline.
  *
- * Estratégia: cache primeiro, rede como reserva. O app é pequeno, estático e
- * nunca muda sozinho, então servir do cache é sempre a resposta certa e
- * instantânea; a versão nova entra quando o CACHE abaixo muda de nome.
+ * Estratégia: responde do cache na hora E revalida pela rede em paralelo,
+ * guardando a versão nova para a próxima abertura ("stale-while-revalidate").
+ *
+ * Por que não cache puro: o `install` só roda de novo quando o PRÓPRIO sw.js
+ * muda de bytes. Com cache-primeiro-e-pronto, qualquer publicação que mexesse
+ * apenas em js/, css/ ou index.html ficaria invisível para sempre para quem já
+ * tivesse aberto o app uma vez. Assim, a correção chega na abertura seguinte.
  *
  * Regra importante: só mexemos em GET de mesma origem. Qualquer outra origem
  * passa direto, sem interceptação — é o que garante que a chamada opcional à
@@ -10,13 +14,14 @@
  */
 'use strict';
 
-var CACHE = 'japo-v1';
+var CACHE = 'japo-v2';
 
 var ARQUIVOS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './assets/icon.svg',
+  './assets/icon-180.png',
   './css/styles.css',
   './css/temas.css',
   './js/ui/dom.js',
@@ -101,10 +106,8 @@ self.addEventListener('fetch', function (ev) {
 
   ev.respondWith(
     caches.match(req, opcoes).then(function (guardado) {
-      if (guardado) return guardado;
-
-      return fetch(req).then(function (resp) {
-        /* Guarda o que veio da rede para a próxima vez. */
+      var daRede = fetch(req).then(function (resp) {
+        /* Guarda a versão nova para a próxima abertura. */
         if (resp && resp.ok && resp.type === 'basic') {
           var copia = resp.clone();
           caches.open(CACHE).then(function (cache) {
@@ -121,8 +124,19 @@ self.addEventListener('fetch', function (ev) {
             });
           });
         }
-        return Response.error();
+        return guardado || Response.error();
       });
+
+      if (!guardado) return daRede;
+
+      /* Tem cópia guardada: responde na hora e deixa a revalidação terminar
+       * em segundo plano, para o próximo carregamento já vir atualizado. */
+      try {
+        ev.waitUntil(daRede.catch(function () { return null; }));
+      } catch (e) {
+        /* Evento já encerrado: a revalidação segue sozinha, sem garantia. */
+      }
+      return guardado;
     })
   );
 });

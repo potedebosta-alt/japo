@@ -113,6 +113,9 @@
 
     var par = atual();
     var g = par.grupo;
+    /* Os grupos especiais (っ, ッ e ー) não entram em exercício: sem pelo menos
+     * dois kana treináveis o botão só conseguiria mostrar um aviso de erro. */
+    var praticaveis = g.items.filter(function (i) { return i.quiz; }).map(function (i) { return i.kana; });
 
     raiz.appendChild(h('div', {}, [
       chips(redesenhar),
@@ -138,17 +141,19 @@
       ]),
       g.hint ? h('p.dica-regra', { text: g.hint }) : null,
       avisoConfusao(par.item),
-      h('div', { style: 'margin-top:18px' }, [
-        h('button.btn.btn-primario.btn-largo', {
-          type: 'button',
-          onclick: function () {
-            global.App.Practice.iniciar({
-              titulo: 'Praticar ' + g.label,
-              kanas: g.items.filter(function (i) { return i.quiz; }).map(function (i) { return i.kana; })
-            });
-          }
-        }, 'Praticar esta linha')
-      ])
+      praticaveis.length >= 2
+        ? h('div', { style: 'margin-top:18px' }, [
+            h('button.btn.btn-primario.btn-largo', {
+              type: 'button',
+              onclick: function () {
+                global.App.Practice.iniciar({
+                  titulo: 'Praticar ' + g.label,
+                  kanas: praticaveis
+                });
+              }
+            }, 'Praticar esta linha')
+          ])
+        : null
     ]));
   }
 

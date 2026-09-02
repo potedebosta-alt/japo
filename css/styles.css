@@ -52,6 +52,11 @@
 
 * { box-sizing: border-box; }
 
+/* O atributo hidden tem que vencer qualquer display do app (o botao .voltar
+   e escondido assim na Home; sem isto ele continua clicavel e o history.back()
+   joga o usuario para fora do app). */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;
@@ -228,14 +233,17 @@ a { color: var(--acento); }
 
 .chips {
   display: flex;
-  gap: 8px;
+  gap: 10px 8px;
   overflow-x: auto;
-  padding: 2px 0 6px;
+  /* A folga vertical existe para o ::before dos chips caber: overflow-x:auto
+     faz o eixo Y virar auto, então o que passar daqui seria recortado. */
+  padding: 8px 0;
   scrollbar-width: none;
 }
 .chips::-webkit-scrollbar { display: none; }
 
 .chip {
+  position: relative;
   flex: none;
   padding: 7px 13px;
   border: 1px solid var(--linha);
@@ -247,6 +255,13 @@ a { color: var(--acento); }
   white-space: nowrap;
   transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
+/* Alvo de toque de 44px sem engordar o desenho do chip. */
+.chip::before {
+  content: '';
+  position: absolute;
+  inset: -7px 0;
+}
+
 .chip[aria-pressed="true"] {
   background: var(--acento);
   border-color: var(--acento);
@@ -553,6 +568,7 @@ a { color: var(--acento); }
   letter-spacing: 0.04em;
 }
 .campo:focus { outline: none; border-color: var(--acento); }
+.campo:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
 .campo.certa { border-color: var(--ok); background: var(--ok-fraco); }
 .campo.errada { border-color: var(--erro); background: var(--erro-fraco); }
 
@@ -657,6 +673,7 @@ a { color: var(--acento); }
   font-weight: 600;
 }
 .campo-titulo:focus { outline: none; border-color: var(--acento); }
+.campo-titulo:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
 .campo-texto {
   min-height: 190px;
   resize: vertical;
@@ -669,6 +686,7 @@ a { color: var(--acento); }
   font-family: var(--fonte);
 }
 .campo-texto:focus { outline: none; border-color: var(--acento); }
+.campo-texto:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
 
 .sugestao {
   border: 1px solid var(--linha);
@@ -694,8 +712,9 @@ a { color: var(--acento); }
 .sugestao .conteudo { flex: 1; min-width: 0; }
 .sugestao b.titulo-sug { display: block; font-size: 0.95rem; margin-bottom: 3px; }
 .sugestao p { margin: 0 0 6px; font-size: 0.88rem; color: var(--tinta-2); white-space: pre-line; }
-.sugestao .rodape { display: flex; gap: 8px; flex-wrap: wrap; }
+.sugestao .rodape { display: flex; gap: 12px 8px; flex-wrap: wrap; }
 .sugestao .mini-btn {
+  position: relative;
   border: 1px solid var(--linha);
   background: transparent;
   border-radius: 999px;
@@ -703,6 +722,12 @@ a { color: var(--acento); }
   font-size: 0.78rem;
   color: var(--tinta-2);
   cursor: pointer;
+}
+/* Alvo de toque de 40px sem engordar o desenho do botao. */
+.sugestao .mini-btn::before {
+  content: '';
+  position: absolute;
+  inset: -5px 0;
 }
 .sugestao .mini-btn:hover { border-color: var(--acento); color: var(--acento); }
 .sugestao .desempenho { font-size: 0.78rem; color: var(--tinta-3); margin-bottom: 6px; }
@@ -878,6 +903,8 @@ a { color: var(--acento); }
   background: var(--cartao);
 }
 .linha-campo input:focus, .linha-campo select:focus { outline: none; border-color: var(--acento); }
+.linha-campo input:focus-visible,
+.linha-campo select:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
 .nota-privacidade {
   margin-top: 10px;
   font-size: 0.8rem;

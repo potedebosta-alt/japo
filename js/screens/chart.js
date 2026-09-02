@@ -294,7 +294,15 @@
 
   function render(raiz) {
     var sistema = global.App.Store.sistema();
-    var grupos = global.App.Kana.get(sistema).groups;
+    var tabela = global.App.Kana.get(sistema);
+
+    /* A seleção é estado de módulo e sobrevive à troca de tela. Se o silabário
+     * mudou por fora (pela Home ou pelo Progresso), o kana escolhido antes não
+     * existe mais nesta tabela — sem isso, o cartão de detalhe ficaria preso
+     * mostrando um し acima da tabela de katakana. */
+    if (estado.selecionado && !tabela.byKana[estado.selecionado]) estado.selecionado = null;
+
+    var grupos = tabela.groups;
 
     function porTipo(t) {
       return grupos.filter(function (g) { return g.type === t; });

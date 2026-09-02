@@ -63,7 +63,11 @@
     return h('div.cartao', {}, [
       h('div.titulo-secao', { style: 'margin-top:0', text: 'Precisam de atenção' }),
       h('div.kana-linha', {}, fracos.map(function (item) {
-        return h('div.kana-bolha.fraco', {
+        /* Botão de verdade (o mesmo padrão da tela Músicas): uma <div> com
+         * onclick não entra na ordem do Tab nem responde ao Enter. */
+        return h('button.kana-bolha.fraco', {
+          type: 'button',
+          'aria-label': 'Ouvir ' + item.kana,
           onclick: function () { global.App.Speech.falar(item.kana); }
         }, [item.kana, h('small', { text: item.romaji })]);
       })),
@@ -156,7 +160,11 @@
         global.App.Store.importar(String(leitor.result || ''));
         global.App.UI.toast('Backup importado.');
       } catch (err) {
-        global.App.UI.toast('Arquivo inválido: ' + err.message);
+        /* A mensagem crua do JSON.parse ("Expected property name or '}'...")
+         * não diz nada a quem só quer restaurar o backup: ela fica no console,
+         * e a tela explica o que fazer. */
+        if (global.console && global.console.error) global.console.error(err);
+        global.App.UI.toast('Não consegui ler esse arquivo. Escolha o japo-backup.json que você exportou aqui.');
       }
       global.App.recarregar();
     };

@@ -12,8 +12,8 @@ App web para memorizar os dois silabários japoneses: HTML, CSS e JavaScript pur
 - **Anotações** — você escreve, o app lê o que você escreveu e sugere complementos gerados localmente. Também funciona como quadro de recortes: dá para fixar imagens (coladas com Ctrl+V ou escolhidas do aparelho, reduzidas antes de guardar), trechos em japonês com a leitura de cada kana por cima, cartões de kana e as próprias sugestões.
 - **Músicas** — fichas de músicas famosas e um leitor onde você cola a letra que quiser estudar.
 - **Tutor** — chat opcional com IA, só se você colar sua própria chave.
-- **Progresso** — todos os kana, um a um, com o nível de cada um.
-- **Ajustes** — tema visual, voz japonesa, chave de IA e apagar os dados.
+- **Progresso** — todos os kana, um a um, com o nível de cada um, mais o backup (exportar e importar o JSON) e o botão **Zerar progresso**, que apaga um silabário por vez.
+- **Ajustes** — tema visual, voz japonesa e chave de IA. Apagar progresso não fica aqui: o botão está em **Progresso**.
 
 ## Temas
 
@@ -64,10 +64,13 @@ japo/
 ├── manifest.webmanifest    dados de instalação (PWA)
 ├── sw.js                   service worker: cache para funcionar offline
 ├── assets/icon.svg         ícone, か desenhado em curvas
+├── assets/icon-180.png     o mesmo ícone em PNG 180×180 (o iOS só aceita PNG no apple-touch-icon)
 ├── css/styles.css          todo o estilo, claro e escuro
+├── css/temas.css           os cinco temas e os fundos vetoriais
 └── js/
     ├── app.js              roteador por hash e inicialização
     ├── ui/dom.js           utilitários de DOM (sem framework)
+    ├── ui/themes.js        troca de tema e gravação da escolha
     ├── data/kana.js        tabelas, pronúncias, mnemônicas e exemplos
     ├── data/confusions.js  pares de kana que se parecem
     ├── data/songs.js       fichas das músicas (sem letra, sem áudio)

@@ -43,12 +43,28 @@
     return null;
   }
 
+  /* Guarda o content de cada meta na primeira passada, antes de qualquer tema
+   * sobrescrever. São duas metas no index.html — uma para o esquema claro e
+   * outra para o escuro —, e cada uma precisa voltar ao valor dela. */
+  function guardarCoresOriginais(metas) {
+    for (var i = 0; i < metas.length; i++) {
+      if (!metas[i].hasAttribute('data-cor-original')) {
+        metas[i].setAttribute('data-cor-original', metas[i].getAttribute('content') || '');
+      }
+    }
+  }
+
   function pintarBarraDoNavegador(id) {
     var metas = document.querySelectorAll('meta[name="theme-color"]');
     if (!metas.length) return;
+    guardarCoresOriginais(metas);
     if (id === 'auto') {
       /* Volta às duas metas originais (uma por esquema de cor). */
-      for (var i = 0; i < metas.length; i++) metas[i].removeAttribute('data-tema-forcado');
+      for (var i = 0; i < metas.length; i++) {
+        var original = metas[i].getAttribute('data-cor-original');
+        if (original) metas[i].setAttribute('content', original);
+        metas[i].removeAttribute('data-tema-forcado');
+      }
       return;
     }
     var cor = corDe(id);

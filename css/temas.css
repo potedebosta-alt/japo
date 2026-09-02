@@ -14,6 +14,8 @@
 /* ============ papel: o claro de sempre, com grão ============ */
 
 :root[data-tema="papel"] {
+  color-scheme: light;
+
   --papel: #faf8f4;
   --cartao: #ffffff;
   --tinta: #17161a;
@@ -40,6 +42,8 @@
 /* ============ higanbana: noite azul com lírios-aranha ============ */
 
 :root[data-tema="higanbana"] {
+  color-scheme: dark;
+
   --papel: #0d1020;
   --cartao: #171b2e;
   --tinta: #f2eee8;
@@ -73,6 +77,8 @@
 /* ============ cartaz: papel ocre com ondas seigaiha ============ */
 
 :root[data-tema="cartaz"] {
+  color-scheme: light;
+
   --papel: #e5d5b8;
   --cartao: #f4e9d4;
   --tinta: #211b13;
@@ -103,6 +109,8 @@
 /* ============ kitsune: preto, osso e vermelho ============ */
 
 :root[data-tema="kitsune"] {
+  color-scheme: dark;
+
   --papel: #0a0a0c;
   --cartao: #17171c;
   --tinta: #f4f1ea;

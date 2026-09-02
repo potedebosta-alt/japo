@@ -71,6 +71,35 @@
 
   /* ---------- leitura kana a kana ---------- */
 
+  /* っ/ッ e ー não têm leitura: "sokuon" e "chouon" são apenas os nomes internos
+   * dessas marcas. Mostrá-los por cima do kana faria コーヒー virar
+   * "ko chouon hi chouon". O kana continua aparecendo; a explicação vai para o
+   * title e para o toast, aproveitando o texto que já existe em e.pron. */
+  function marcaSemSom(e) {
+    return e.romaji === 'sokuon' || e.romaji === 'chouon';
+  }
+
+  function leituraDe(e) {
+    return marcaSemSom(e) ? '' : e.romaji;
+  }
+
+  function descreverKana(e) {
+    if (!marcaSemSom(e)) return e.kana + ' = ' + e.romaji;
+    return e.kana + ' — ' + (e.pron || '').replace('sem som próprio — ', '');
+  }
+
+  /* Um <span> clicável não entra na ordem do Tab nem responde ao teclado. Com
+   * role e tabindex ele entra; este handler repete a ação no Enter e no Espaço,
+   * como faria um <button> de verdade. */
+  function aoTeclar(acao) {
+    return function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+        ev.preventDefault();
+        acao();
+      }
+    };
+  }
+
   /* Monta o texto japonês com a leitura por cima de cada kana.
    * Kanji fica sem leitura — o app não tem dicionário, e inventar seria pior. */
   function blocoLeitura(texto) {
@@ -92,16 +121,20 @@
 
       if (e) {
         despejarComum();
+        var acao = function (entrada) {
+          return function () {
+            global.App.Speech.falar(entrada.kana);
+            global.App.UI.toast(descreverKana(entrada));
+          };
+        }(e);
         caixa.appendChild(h('span.rb-item', {
-          title: e.pron,
-          onclick: function (kana) {
-            return function () {
-              global.App.Speech.falar(kana);
-              global.App.UI.toast(kana + ' = ' + global.App.Kana.find(kana).romaji);
-            };
-          }(e.kana)
+          title: descreverKana(e),
+          role: 'button',
+          tabindex: '0',
+          onclick: acao,
+          onkeydown: aoTeclar(acao)
         }, [
-          h('span.rb-r', { text: e.romaji }),
+          h('span.rb-r', { text: leituraDe(e) }),
           h('span.rb-k', { text: e.kana })
         ]));
         i += tam;

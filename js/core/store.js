@@ -192,16 +192,27 @@
     limparChat: function () { state.chat = []; save(); },
 
     /* --- backup --- */
-    exportar: function () { return JSON.stringify(state, null, 2); },
+    /* O backup sai SEM a chave da API: é um arquivo que a pessoa manda por
+     * e-mail, guarda na nuvem ou passa para outro aparelho, e uma credencial
+     * não pode viajar junto por acidente. */
+    exportar: function () {
+      var copia = JSON.parse(JSON.stringify(state));
+      if (copia.ajustes) copia.ajustes.aiKey = '';
+      return JSON.stringify(copia, null, 2);
+    },
     importar: function (json) {
       var parsed = JSON.parse(json);
       if (!parsed || typeof parsed !== 'object' || !parsed.stats) throw new Error('Arquivo inválido');
+      /* A chave que já está neste aparelho manda: um backup não sobrescreve
+       * (nem apaga) a credencial de quem está importando. */
+      var chaveLocal = state.ajustes && state.ajustes.aiKey;
       state = merge(base(), parsed);
       if (Array.isArray(parsed.notas)) state.notas = parsed.notas;
       if (Array.isArray(parsed.chat)) state.chat = parsed.chat;
       ['hiragana', 'katakana'].forEach(function (s) {
         if (parsed.stats[s]) state.stats[s] = parsed.stats[s];
       });
+      if (chaveLocal) state.ajustes.aiKey = chaveLocal;
       saveNow();
     },
     zerarProgresso: function (system) {
@@ -209,10 +220,12 @@
         state.stats[system] = {};
         state.totais[system] = { resp: 0, certas: 0, streak: 0, melhor: 0 };
       } else {
-        var notas = state.notas, ajustes = state.ajustes;
+        /* Zerar tudo apaga o progresso, não o que a pessoa escreveu. */
+        var notas = state.notas, ajustes = state.ajustes, chat = state.chat;
         state = base();
         state.notas = notas;
         state.ajustes = ajustes;
+        state.chat = chat;
       }
       saveNow();
     }

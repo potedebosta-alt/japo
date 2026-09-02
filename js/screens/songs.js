@@ -51,8 +51,32 @@
     return st === 'novo' || st === 'revisar';
   }
 
+  /* っ/ッ e ー não têm leitura: "sokuon" e "chouon" são apenas os nomes internos
+   * dessas marcas, e mostrá-los como pronúncia confunde. O kana continua à
+   * vista; a explicação (que já vem em e.pron) vai para o title e para o toast. */
+  function marcaSemSom(e) {
+    return e.romaji === 'sokuon' || e.romaji === 'chouon';
+  }
+
+  function leituraDe(e) {
+    return marcaSemSom(e) ? '' : e.romaji;
+  }
+
   function ficha(e) {
+    if (marcaSemSom(e)) return e.kana + ' — ' + (e.pron || '').replace('sem som próprio — ', '');
     return e.kana + ' = ' + e.romaji + ' — ' + e.pron;
+  }
+
+  /* Um <span> clicável não entra na ordem do Tab nem responde ao teclado. Com
+   * role e tabindex ele entra; este handler repete a ação no Enter e no Espaço,
+   * como faria um <button> de verdade. */
+  function aoTeclar(acao) {
+    return function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+        ev.preventDefault();
+        acao();
+      }
+    };
   }
 
   function anunciar(e) {
@@ -104,7 +128,7 @@
       type: 'button',
       'aria-label': 'Ouvir ' + e.kana,
       onclick: function () { anunciar(e); }
-    }, [e.kana, h('small', { text: e.romaji })]);
+    }, [e.kana, h('small', { text: leituraDe(e) })]);
   }
 
   /* ---------- detalhe: leitor da letra colada ---------- */
@@ -166,11 +190,15 @@
         if (!e) { buffer += c; continue; }
         descarregar();
         if (!vistos[e.kana]) { vistos[e.kana] = 1; distintos.push(e.kana); }
+        var acao = (function (entrada) {
+          return function () { anunciar(entrada); };
+        })(e);
         leitor.appendChild(h('span.tk' + (ehFraco(e) ? '.fraco' : ''), {
           title: ficha(e),
-          onclick: (function (entrada) {
-            return function () { anunciar(entrada); };
-          })(e)
+          role: 'button',
+          tabindex: '0',
+          onclick: acao,
+          onkeydown: aoTeclar(acao)
         }, c));
       }
       descarregar();

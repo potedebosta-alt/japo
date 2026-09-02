@@ -32,7 +32,7 @@
       id: 'gurenge', titulo: '紅蓮華', kana: 'ぐれんげ', romaji: 'Gurenge',
       pt: 'Flor de lótus carmesim', artista: 'LiSA', ano: 2019,
       contexto: 'Demon Slayer (Kimetsu no Yaiba) — abertura 1', foco: 'hiragana',
-      dica: 'Três kana com dakuten: ぐ, げ. Bom para fixar a marca ゛.'
+      dica: 'Dois kana com dakuten: ぐ, げ. Bom para fixar a marca ゛.'
     },
     {
       id: 'homura', titulo: '炎', kana: 'ほむら', romaji: 'Homura',

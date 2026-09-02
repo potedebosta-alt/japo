@@ -92,6 +92,10 @@
   }
 
   function proximaQuestao() {
+    /* Um acerto agenda o avanço automático. Se o usuário mexer em alguma coisa
+     * antes de o prazo vencer (trocar de chip, por exemplo), o avanço antigo
+     * pularia uma questão sozinho — então ele morre aqui. */
+    cancelarTimer();
     var permitirNovos = sessao.novos < NOVOS_POR_SESSAO || sessao.modo === 'revisao';
     var alvo = global.App.SRS.escolher(sessao.sistema, sessao.pool, {
       evitar: sessao.recentes,
@@ -133,8 +137,12 @@
     }
   }
 
-  function continuar() {
+  function cancelarTimer() {
     if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  function continuar() {
+    cancelarTimer();
     if (!sessao) return;
     if (sessao.limite && sessao.feitas >= sessao.limite) {
       sessao.estado = 'fim';
@@ -307,6 +315,11 @@
         h('button.btn.btn-primario.btn-largo', {
           type: 'button',
           onclick: function () {
+            /* Se a sessão veio de um baralho montado (uma linha do Estudar, os
+             * kana de uma música, os de uma anotação), refazer é refazer AQUELE
+             * baralho — não cair na prática genérica. */
+            var origem = sessao.origem;
+            if (origem) { iniciar(origem); return; }
             sessao = sessao.modo === 'revisao' ? sessaoRevisao() : sessaoPadrao();
             proximaQuestao();
             global.App.recarregar();
@@ -402,16 +415,26 @@
     }
   }
 
-  function renderPratica(raiz, params) {
+  function renderPratica(raiz) {
     var trocouSistema = sessao && sessao.sistema !== global.App.Store.sistema();
-    if (!sessao || sessao.modo !== 'pratica' || trocouSistema || (params && params.novo)) {
-      if (!sessao || sessao.modo !== 'pratica' || trocouSistema) {
-        sessao = sessaoPadrao();
-        proximaQuestao();
-      }
+    if (!sessao || sessao.modo !== 'pratica' || trocouSistema) {
+      sessao = sessaoPadrao();
+      proximaQuestao();
     }
     desenhar(raiz);
   }
+
+  /* Chamado quando a pessoa ENTRA na tela (não a cada redesenho). Uma sessão
+   * que já terminou vira lixo: sem isto, tocar em "Praticar" na Home devolvia o
+   * resumo final da sessão anterior em vez de começar outra. */
+  function entrar() {
+    if (sessao && sessao.estado === 'fim') sessao = null;
+  }
+
+  /* Sair da tela mata o avanço automático pendente: senão ele dispararia já em
+   * outra tela, redesenhando o que estivesse no ar e roubando o foco de quem
+   * estivesse digitando. */
+  function sair() { cancelarTimer(); }
 
   function renderRevisao(raiz) {
     if (!sessao || sessao.modo !== 'revisao' || sessao.sistema !== global.App.Store.sistema()) {
@@ -461,6 +484,7 @@
       pool: pool,
       limite: cfg.limite || Math.max(8, Math.min(24, pool.length * 2))
     });
+    sessao.origem = cfg;   /* guarda a receita, para o "Fazer de novo" */
     proximaQuestao();
     global.App.ir('praticar');
   }
@@ -468,6 +492,10 @@
   global.App = global.App || {};
   global.App.Practice = { iniciar: iniciar };
   global.App.Screens = global.App.Screens || {};
-  global.App.Screens.praticar = { titulo: 'Praticar', render: renderPratica, teclado: teclado };
-  global.App.Screens.revisao = { titulo: 'Revisão', render: renderRevisao, teclado: teclado };
+  global.App.Screens.praticar = {
+    titulo: 'Praticar', render: renderPratica, teclado: teclado, entrar: entrar, sair: sair
+  };
+  global.App.Screens.revisao = {
+    titulo: 'Revisão', render: renderRevisao, teclado: teclado, sair: sair
+  };
 })(window);

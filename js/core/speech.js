@@ -49,8 +49,15 @@
     } else {
       synth.onvoiceschanged = function () { escolherVoz(); avisar(); };
     }
-    /* Chrome às vezes só popula as vozes depois de um tick. */
-    global.setTimeout(function () { if (!voz) { escolherVoz(); avisar(); } }, 400);
+    /* Chrome às vezes só popula as vozes depois de um tick. Passado esse
+     * prazo, a busca está encerrada: sem voz japonesa aqui, o app precisa
+     * saber disso para esconder o exercício de escuta em vez de oferecer
+     * questões mudas. */
+    global.setTimeout(function () {
+      if (!voz) escolherVoz();
+      procurou = true;
+      avisar();
+    }, 400);
   }
 
   global.App = global.App || {};
@@ -78,6 +85,10 @@
     },
     falar: function (texto, opcoes) {
       if (!synth || !texto) return false;
+      if (!voz) escolherVoz();
+      /* Sem voz japonesa instalada, falar em japonês com a voz padrão sai
+       * como leitura em outra língua. Melhor dizer que não dá. */
+      if (!voz && procurou) return false;
       opcoes = opcoes || {};
       try {
         synth.cancel();

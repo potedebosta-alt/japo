@@ -75,20 +75,29 @@
   function textoDa(resposta) {
     /* Uma recusa chega com HTTP 200: precisa ser checada antes de ler o conteúdo. */
     if (resposta.stop_reason === 'refusal') {
-      throw new Error('O modelo recusou responder a esta anotação.');
+      throw new Error('O modelo recusou responder a isso.');
     }
-    return (resposta.content || [])
+    var texto = (resposta.content || [])
       .filter(function (b) { return b.type === 'text'; })
       .map(function (b) { return b.text; })
       .join('\n')
       .trim();
+    /* Resposta cortada no limite de tokens pode chegar sem texto nenhum —
+     * sem este aviso, viraria uma mensagem vazia salva no histórico. */
+    if (!texto && resposta.stop_reason === 'max_tokens') {
+      throw new Error('A resposta ficou longa demais e foi cortada. Tente uma pergunta mais específica.');
+    }
+    if (!texto) {
+      throw new Error('A IA respondeu sem conteúdo. Tente de novo.');
+    }
+    return texto;
   }
 
   function sugerir(texto, sistema) {
     if (!configurado()) return Promise.reject(new Error('Nenhuma chave de IA configurada.'));
     var corpo = {
       model: ajustes().aiModel || MODELO_PADRAO,
-      max_tokens: 2000,
+      max_tokens: 8000,
       output_config: { effort: 'low' },
       fallbacks: 'default',
       system: SISTEMA,
@@ -140,9 +149,15 @@
     var mensagens = historico.slice(-16).map(function (m) {
       return { role: m.papel === 'assistant' ? 'assistant' : 'user', content: m.texto };
     });
+    /* O corte pode cair no meio de um par pergunta/resposta e começar por uma
+     * fala do assistente — a API recusa isso com 400. Descarta o começo até
+     * sobrar uma pergunta na frente. */
+    while (mensagens.length && mensagens[0].role !== 'user') mensagens.shift();
+    if (!mensagens.length) return Promise.reject(new Error('Nada para enviar.'));
+
     return chamar({
       model: ajustes().aiModel || MODELO_PADRAO,
-      max_tokens: 4000,
+      max_tokens: 16000,
       output_config: { effort: 'low' },
       fallbacks: 'default',
       system: SISTEMA_TUTOR + '\n\n' + panorama(sistema),

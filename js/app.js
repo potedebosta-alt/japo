@@ -47,11 +47,21 @@
   }
 
   function aoTrocarHash() {
-    var nova = lerHash();
-    rotaAtual = nova;
+    /* A tela que está saindo tem direito de arrumar a casa (cancelar timers,
+     * por exemplo) antes de sumir. Sem isso, um avanço automático agendado na
+     * prática dispararia já dentro de outra tela. */
+    var anterior = global.App.Screens[rotaAtual];
+    if (anterior && typeof anterior.sair === 'function') anterior.sair();
+
+    rotaAtual = lerHash();
     paramsAtuais = paramsPendentes || {};
     paramsPendentes = null;
     global.App.Speech.parar();
+
+    /* entrar() roda só ao chegar na tela — nunca a cada redesenho. */
+    var atual = global.App.Screens[rotaAtual];
+    if (atual && typeof atual.entrar === 'function') atual.entrar(paramsAtuais);
+
     desenhar();
   }
 
