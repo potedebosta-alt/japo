@@ -80,8 +80,9 @@ japo/
     ├── core/quiz.js        montagem das questões e dos distratores
     ├── core/tips.js        sugestões locais para as anotações
     ├── core/ai.js          IA opcional, com a chave do usuário
-    └── screens/            uma tela por arquivo (home, chart, study, practice,
-                            notes, songs, chat, progress, settings)
+    ├── screens/chart.js    a Tabela: os dois silabários, regras e variantes
+    └── screens/            as outras telas, uma por arquivo (home, study,
+                            practice, notes, songs, chat, progress, settings)
 ```
 
 O conteúdo dos kana — pronúncias aproximadas em português, mnemônicas e palavras-exemplo — é material didático próprio do projeto.

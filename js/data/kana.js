@@ -606,6 +606,14 @@
     counterpart: function (kana) { return pairs[kana] || null; },
     find: function (kana) { return hiragana.byKana[kana] || katakana.byKana[kana] || null; },
     pron: PRON,
+    /* Leitura para MOSTRAR na tela. っ/ッ e ー não têm som próprio: "sokuon" e
+     * "chouon" são só os nomes internos dessas marcas, e exibi-los como se
+     * fossem leitura confunde. */
+    leitura: function (entrada) {
+      if (!entrada) return '';
+      if (entrada.romaji === 'sokuon' || entrada.romaji === 'chouon') return '';
+      return entrada.romaji;
+    },
     /* Romanização alternativa (kunrei-shiki). Devolve a Hepburn quando não há diferença. */
     kunrei: function (entrada) {
       if (!entrada) return '';

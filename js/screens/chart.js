@@ -70,6 +70,9 @@
   ];
 
   function roman(entrada) {
+    /* Marcas sem som próprio (っ, ッ, ー) não têm romanização nenhuma —
+     * nem Hepburn nem kunrei. A explicação delas vem no rodapé da seção. */
+    if (!global.App.Kana.leitura(entrada)) return '';
     return estado.roman === 'kunrei' ? global.App.Kana.kunrei(entrada) : entrada.romaji;
   }
 

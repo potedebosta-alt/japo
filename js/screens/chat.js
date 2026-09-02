@@ -56,7 +56,8 @@
 
     global.App.AI.conversar(historico, global.App.Store.sistema())
       .then(function (resposta) {
-        global.App.Store.addChat('assistant', resposta || '(resposta vazia)');
+        /* Resposta vazia não chega aqui: o ai.js já lança nesse caso. */
+        global.App.Store.addChat('assistant', resposta);
       })
       .catch(function (err) {
         global.App.UI.toast(err.message || 'Falha ao falar com o tutor.');

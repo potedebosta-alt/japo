@@ -84,7 +84,7 @@
   }
 
   function descreverKana(e) {
-    if (!marcaSemSom(e)) return e.kana + ' = ' + e.romaji;
+    if (!marcaSemSom(e)) return e.kana + ' = ' + e.romaji + (e.pron ? ' — ' + e.pron : '');
     return e.kana + ' — ' + (e.pron || '').replace('sem som próprio — ', '');
   }
 

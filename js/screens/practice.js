@@ -496,6 +496,6 @@
     titulo: 'Praticar', render: renderPratica, teclado: teclado, entrar: entrar, sair: sair
   };
   global.App.Screens.revisao = {
-    titulo: 'Revisão', render: renderRevisao, teclado: teclado, sair: sair
+    titulo: 'Revisão', render: renderRevisao, teclado: teclado, entrar: entrar, sair: sair
   };
 })(window);

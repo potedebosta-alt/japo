@@ -645,7 +645,7 @@ a { color: var(--acento); }
 
 /* ---------- anotações ---------- */
 
-.lista-notas { display: grid; gap: 10px; margin-top: 12px; }
+.lista-notas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 12px; }
 .item-nota {
   display: flex;
   align-items: center;
@@ -713,21 +713,20 @@ a { color: var(--acento); }
 .sugestao b.titulo-sug { display: block; font-size: 0.95rem; margin-bottom: 3px; }
 .sugestao p { margin: 0 0 6px; font-size: 0.88rem; color: var(--tinta-2); white-space: pre-line; }
 .sugestao .rodape { display: flex; gap: 12px 8px; flex-wrap: wrap; }
+/* 40px de altura de verdade. O truque do ::before, usado nos chips, não se
+   sustenta aqui: estes botões ficam numa linha que quebra, e o pseudo-elemento
+   de um acabava coberto pelo vizinho de baixo. Botão real é mais confiável. */
 .sugestao .mini-btn {
-  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   border: 1px solid var(--linha);
   background: transparent;
   border-radius: 999px;
-  padding: 5px 11px;
+  padding: 5px 14px;
   font-size: 0.78rem;
   color: var(--tinta-2);
   cursor: pointer;
-}
-/* Alvo de toque de 40px sem engordar o desenho do botao. */
-.sugestao .mini-btn::before {
-  content: '';
-  position: absolute;
-  inset: -5px 0;
 }
 .sugestao .mini-btn:hover { border-color: var(--acento); color: var(--acento); }
 .sugestao .desempenho { font-size: 0.78rem; color: var(--tinta-3); margin-bottom: 6px; }

@@ -71,7 +71,9 @@
 
     if (mostrar) {
       conteudo.push(h('div.linha-info', {}, [
-        h('div.romaji', { text: item.romaji }),
+        /* っ e ー não têm leitura própria: o travessão evita mostrar o nome
+         * interno da marca ("sokuon") como se fosse pronúncia. */
+        h('div.romaji', { text: global.App.Kana.leitura(item) || '—' }),
         global.App.UI.botaoSom(item.kana, 'Ouvir ' + item.kana)
       ]));
       conteudo.push(h('p.pron', { text: item.pron }));
