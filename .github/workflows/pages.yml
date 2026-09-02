@@ -29,6 +29,10 @@ jobs:
 
       - name: Configurar o Pages
         uses: actions/configure-pages@v5
+        # Liga o Pages sozinho na primeira execução, se a conta permitir.
+        # Se falhar, é só ativar à mão em Settings -> Pages -> Source: GitHub Actions.
+        with:
+          enablement: true
 
       - name: Enviar a raiz como artefato
         uses: actions/upload-pages-artifact@v3
