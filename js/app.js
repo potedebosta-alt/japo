@@ -98,6 +98,9 @@
 
   function iniciar() {
     global.App.Store.init();
+    /* De novo: agora o Store tem o tema salvo (o themes.js só tinha o
+     * localStorage cru quando rodou, antes do Store carregar). */
+    global.App.Themes.iniciar();
 
     var voz = global.App.Store.ajustes().voz;
     if (voz) global.App.Speech.usarVoz(voz);

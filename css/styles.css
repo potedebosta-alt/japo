@@ -709,6 +709,96 @@ a { color: var(--acento); }
 
 .sugestoes { display: grid; gap: 10px; margin-top: 10px; }
 
+/* ---------- recortes fixados na anotação ---------- */
+
+.barra-fixar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.barra-fixar .btn { flex: 1 1 auto; min-width: 140px; }
+
+.fixados {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+@media (min-width: 620px) {
+  .fixados { grid-template-columns: 1fr 1fr; align-items: start; }
+}
+
+.fixado {
+  position: relative;
+  padding: 14px 40px 14px 16px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--cartao);
+  animation: entra 160ms ease-out;
+}
+
+.remover-fixado {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--tinta-3);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+/* Alvo de toque de 44px sem inflar o desenho do botão. */
+.remover-fixado::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+.remover-fixado:hover { background: var(--erro-fraco); color: var(--erro); }
+
+.fixado-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--raio-p);
+}
+
+.leitura-ruby {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1px 0;
+  font-family: var(--fonte-kana);
+  line-height: 1.15;
+}
+.rb-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 1px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.rb-item:hover { background: var(--acento-fraco); }
+.rb-k { font-size: 1.35rem; }
+.rb-r {
+  font-family: var(--fonte);
+  font-size: 0.58rem;
+  color: var(--tinta-3);
+  letter-spacing: 0.02em;
+}
+/* Texto que não é kana (kanji, pontuação, quebras de linha) segue inteiro. */
+.rb-plano {
+  align-self: flex-end;
+  font-size: 1.35rem;
+  white-space: pre-wrap;
+  padding-bottom: 2px;
+}
+
 /* ---------- músicas ---------- */
 
 .lista-musicas { display: grid; gap: 10px; margin-top: 12px; }

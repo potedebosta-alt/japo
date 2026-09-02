@@ -20,7 +20,7 @@
       },
       notas: [],
       chat: [],
-      ajustes: { aiKey: '', aiModel: 'claude-opus-5', voz: '' }
+      ajustes: { aiKey: '', aiModel: 'claude-opus-5', voz: '', tema: 'auto' }
     };
   }
 
@@ -60,14 +60,21 @@
     }
   }
 
-  function saveNow() {
-    if (!storageOk) return;
+  /* Grava na hora e diz se conseguiu. Cota estourada é o caso comum aqui:
+   * uma imagem fixada numa anotação pode passar do limite do navegador. */
+  function salvarAgora() {
     try {
       global.localStorage.setItem(KEY, JSON.stringify(state));
+      return true;
     } catch (e) {
-      storageOk = false;
+      /* Cota cheia não significa storage bloqueado: o app continua salvando
+       * o resto normalmente depois que o usuário liberar espaço. */
+      if (!e || e.name !== 'QuotaExceededError') storageOk = false;
+      return false;
     }
   }
+
+  function saveNow() { salvarAgora(); }
 
   function save() {
     if (timer) global.clearTimeout(timer);
@@ -121,12 +128,44 @@
     },
     novaNota: function (sistema) {
       var n = {
-        id: uid(), titulo: '', texto: '', sistema: sistema || state.sistema,
+        id: uid(), titulo: '', texto: '', itens: [], sistema: sistema || state.sistema,
         criadaEm: Date.now(), editadaEm: Date.now()
       };
       state.notas.unshift(n);
       save();
       return n;
+    },
+
+    /* --- itens fixados numa anotação (imagem, letra, kana, recorte) --- */
+    itensNota: function (id) {
+      var n = this.nota(id);
+      if (!n) return [];
+      if (!n.itens) n.itens = [];
+      return n.itens;
+    },
+    /* Devolve false quando o navegador recusa gravar (cota estourada) e
+     * desfaz o que acabou de ser acrescentado, para a anotação não ficar
+     * com um item que sumiria no próximo carregamento. */
+    fixarNaNota: function (id, item) {
+      var itens = this.itensNota(id);
+      item.id = uid();
+      item.em = Date.now();
+      itens.push(item);
+      var n = this.nota(id);
+      if (n) n.editadaEm = Date.now();
+      if (!salvarAgora()) {
+        itens.pop();
+        salvarAgora();
+        return null;
+      }
+      return item;
+    },
+    desafixar: function (id, itemId) {
+      var n = this.nota(id);
+      if (!n || !n.itens) return;
+      n.itens = n.itens.filter(function (i) { return i.id !== itemId; });
+      n.editadaEm = Date.now();
+      salvarAgora();
     },
     salvarNota: function (id, campos) {
       var n = this.nota(id);

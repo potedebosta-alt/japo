@@ -9,11 +9,22 @@ App web para memorizar os dois silabários japoneses: HTML, CSS e JavaScript pur
 - **Estudar** — linha por linha (あ, か, さ…), com som, mnemônica, palavra-exemplo e modo flashcard.
 - **Praticar** — quatro tipos de exercício: kana → romaji, romaji → kana, ouvir e digitar.
 - **Revisão** — sessão finita (14 itens) montada a partir dos seus erros recentes e do que já venceu.
-- **Anotações** — você escreve, o app lê o que você escreveu e sugere complementos gerados localmente.
+- **Anotações** — você escreve, o app lê o que você escreveu e sugere complementos gerados localmente. Também funciona como quadro de recortes: dá para fixar imagens (coladas com Ctrl+V ou escolhidas do aparelho, reduzidas antes de guardar), trechos em japonês com a leitura de cada kana por cima, cartões de kana e as próprias sugestões.
 - **Músicas** — fichas de músicas famosas e um leitor onde você cola a letra que quiser estudar.
 - **Tutor** — chat opcional com IA, só se você colar sua própria chave.
 - **Progresso** — todos os kana, um a um, com o nível de cada um.
-- **Ajustes** — silabário, tipo de exercício, voz, chave de IA e apagar os dados.
+- **Ajustes** — tema visual, voz japonesa, chave de IA e apagar os dados.
+
+## Temas
+
+Cinco aparências, trocadas em **Ajustes**: `Automático` (segue o claro/escuro do sistema),
+`Papel` (claro, com grão), `Higanbana` (noite azul com lírios-aranha), `Cartaz` (ocre vintage
+com ondas seigaiha) e `Kitsune` (preto e vermelho com sakura).
+
+Os fundos são desenho vetorial escrito à mão em `css/temas.css` — SVG embutido, sem imagem
+externa e sem fonte externa, para o app continuar abrindo offline. A arte fica sempre no
+`body`, nunca dentro dos cartões: assim o texto cai sempre sobre cor chapada. O contraste
+medido entre texto e cartão vai de 14:1 a 18:1 nos quatro temas (o mínimo recomendado é 4,5:1).
 
 ## Como o app decide o que perguntar
 

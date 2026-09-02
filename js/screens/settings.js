@@ -165,11 +165,44 @@
     ]);
   }
 
+  /* ---------- aparência ---------- */
+
+  function secaoAparencia() {
+    var atual = global.App.Themes.atual();
+    var faixa = h('div.chips', { 'aria-label': 'Tema visual', style: 'flex-wrap:wrap' });
+
+    global.App.Themes.LISTA.forEach(function (t) {
+      faixa.appendChild(h('button.chip', {
+        type: 'button',
+        'aria-pressed': atual === t.id ? 'true' : 'false',
+        title: t.desc,
+        onclick: function () {
+          global.App.Themes.aplicar(t.id);
+          global.App.recarregar();
+        }
+      }, t.nome));
+    });
+
+    var escolhido = null;
+    global.App.Themes.LISTA.forEach(function (t) { if (t.id === atual) escolhido = t; });
+
+    return h('div.cartao', {}, [
+      faixa,
+      h('p.mini', { style: 'margin-top:10px', text: escolhido ? escolhido.desc : '' }),
+      h('p.mini', {
+        text: 'Os fundos são desenho vetorial feito para o app: não pesam, não pedem internet e ' +
+              'ficam sempre atrás dos cartões, para o kana continuar sendo o que se lê primeiro.'
+      })
+    ]);
+  }
+
   /* ---------- tela ---------- */
 
   function render(raiz) {
     raiz.appendChild(h('div', {}, [
-      h('div.titulo-secao', { style: 'margin-top:0', text: 'Voz' }),
+      h('div.titulo-secao', { style: 'margin-top:0', text: 'Aparência' }),
+      secaoAparencia(),
+      h('div.titulo-secao', { text: 'Voz' }),
       secaoVoz(),
       h('div.titulo-secao', { text: 'IA (opcional)' }),
       secaoIA(),
