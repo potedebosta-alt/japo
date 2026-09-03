@@ -9,10 +9,15 @@
 
   function grupos() { return global.App.Kana.get(global.App.Store.sistema()).groups; }
 
+  /* Normaliza a posição em vez de só limitar na hora de desenhar: o silabário
+   * pode ter mudado e deixado o índice apontando além do fim da linha, e o
+   * contador chegava a mostrar "2 / 1". */
   function atual() {
     var gs = grupos();
-    var g = gs[Math.min(estado.grupo, gs.length - 1)];
-    return { grupo: g, item: g.items[Math.min(estado.indice, g.items.length - 1)] };
+    estado.grupo = Math.max(0, Math.min(estado.grupo, gs.length - 1));
+    var g = gs[estado.grupo];
+    estado.indice = Math.max(0, Math.min(estado.indice, g.items.length - 1));
+    return { grupo: g, item: g.items[estado.indice] };
   }
 
   function irPara(delta, redesenhar) {

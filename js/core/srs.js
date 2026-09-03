@@ -184,6 +184,17 @@
       var ea = Store().peek(system, a.kana), eb = Store().peek(system, b.kana);
       return (ea.lvl - eb.lvl) || (eb.no - ea.no);
     }));
+
+    /* Quem praticou um kana só receberia esse mesmo kana oito vezes seguidas.
+     * Completa com vizinhos de linha e, se ainda faltar, com kana novos —
+     * revisar sozinho não é revisar, é repetir. */
+    if (lista.length < 4) {
+      var linhas = {};
+      lista.forEach(function (i) { linhas[i.group] = 1; });
+      add(pool.filter(function (i) { return linhas[i.group]; }));
+      add(pool.filter(function (i) { return i.type === 'gojuon'; }));
+      add(pool);
+    }
     return lista;
   }
 
@@ -198,7 +209,9 @@
       else if (st === 'revisar') r.revisar++;
       else r.dominados++;
       if (e) {
-        r.pontos += Math.min(MAX_LVL, e.lvl || 0);
+        /* Nível corrompido (texto, negativo) virava "NaN%" no anel. */
+        var lvl = Math.round(Number(e.lvl));
+        r.pontos += Math.max(0, Math.min(MAX_LVL, isFinite(lvl) ? lvl : 0));
         if (e.n && e.due && now >= e.due && !dominado(e)) r.devidos++;
       }
     });

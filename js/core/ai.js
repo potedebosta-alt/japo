@@ -61,6 +61,11 @@
         'anthropic-beta': 'server-side-fallback-2026-07-01'
       },
       body: JSON.stringify(corpo)
+    }).catch(function () {
+      /* O navegador devolve um seco "Failed to fetch" para queda de rede,
+       * CORS e chave recusada no preflight. Traduzir importa: é a mensagem
+       * que a pessoa vê no toast. */
+      throw new Error('Não consegui falar com a API. Verifique sua internet e a chave em Ajustes.');
     }).then(function (r) {
       return r.json().then(function (json) {
         if (!r.ok) {

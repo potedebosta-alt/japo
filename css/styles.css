@@ -239,6 +239,11 @@ a { color: var(--acento); }
      faz o eixo Y virar auto, então o que passar daqui seria recortado. */
   padding: 8px 0;
   scrollbar-width: none;
+  /* A faixa rola na horizontal e a barra é escondida: sem esta borda esmaecida
+     nada indicava que existem mais opções à direita (em 320px, as linhas
+     depois de たちつてと ficam fora da tela). */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
 }
 .chips::-webkit-scrollbar { display: none; }
 

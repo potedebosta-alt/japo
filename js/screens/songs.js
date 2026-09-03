@@ -14,6 +14,10 @@
   var h = global.App.UI.h;
   var CHAVE = 'japo:letra:';
   var ESPERA = 300;
+  /* Teto do que o leitor DESENHA. O texto colado é guardado inteiro; só a
+   * marcação para aqui. Cada kana vira um elemento clicável, então um texto
+   * gigante travava a interface por quase um segundo a cada pausa na digitação. */
+  var LIMITE_LEITOR = 4000;
 
   var estado = { aberta: null };
   var timer = null;
@@ -166,7 +170,9 @@
     });
 
     function reconstruir() {
-      var texto = area.value || '';
+      var textoCompleto = area.value || '';
+      var texto = textoCompleto.slice(0, LIMITE_LEITOR);
+      var cortou = textoCompleto.length > LIMITE_LEITOR;
       var vistos = {};
       var buffer = '';
       var i;
@@ -211,6 +217,10 @@
         contagem.textContent = '1 kana distinto encontrado.';
       } else {
         contagem.textContent = distintos.length + ' kana distintos encontrados.';
+      }
+      if (cortou) {
+        contagem.textContent += ' O texto é longo: marquei os primeiros ' +
+          LIMITE_LEITOR + ' caracteres (o resto continua salvo).';
       }
       global.App.UI.limpar(caixaPraticar);
       if (distintos.length >= 4) caixaPraticar.appendChild(praticar);

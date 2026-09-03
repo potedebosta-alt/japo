@@ -122,6 +122,21 @@
     if (!global.location.hash) global.location.replace('#/home');
     aoTrocarHash();
 
+    /* Falhar calado é o pior desfecho num app que promete guardar o estudo:
+     * qualquer gravação recusada vira aviso na hora. */
+    global.App.Store.aoFalharGravacao(function (motivo) {
+      global.App.UI.toast(motivo === 'cheio'
+        ? 'Sem espaço neste navegador: o progresso parou de ser salvo. Remova imagens fixadas nas anotações.'
+        : 'Este navegador está bloqueando o armazenamento: o progresso não será salvo.');
+    });
+
+    /* Outra aba mexeu nos mesmos dados: recarrega a tela com o que ficou
+     * gravado, em vez de escrever por cima e apagar o que a outra fez. */
+    global.App.Store.aoMudarEmOutraAba(function () {
+      global.App.UI.toast('Os dados mudaram em outra aba — recarreguei esta tela.');
+      desenhar();
+    });
+
     if (!global.App.Store.ok()) {
       global.App.UI.toast('Este navegador está bloqueando o armazenamento: o progresso não será salvo.');
     }

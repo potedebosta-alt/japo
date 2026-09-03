@@ -77,7 +77,12 @@
     }, '🔊');
   }
 
-  function pct(n) { return Math.round(n) + '%'; }
+  /* Um dado corrompido não pode virar "NaN%" no anel de progresso. */
+  function pct(n) {
+    var v = Math.round(Number(n));
+    if (!isFinite(v)) v = 0;
+    return Math.max(0, Math.min(100, v)) + '%';
+  }
 
   /* Anel de progresso em SVG. */
   function anel(valor, tamanho) {

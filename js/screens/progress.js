@@ -154,6 +154,9 @@
 
   function importar(arquivo) {
     if (!arquivo) return;
+    /* Importar SUBSTITUI tudo o que está aqui: progresso, anotações e recortes.
+     * Um clique errado apagava o estudo inteiro sem uma palavra. */
+    if (!global.confirm('Importar este backup substitui o progresso e as anotações que estão neste navegador. Continuar?')) return;
     var leitor = new global.FileReader();
     leitor.onload = function () {
       try {

@@ -96,7 +96,11 @@
      * antes de o prazo vencer (trocar de chip, por exemplo), o avanço antigo
      * pularia uma questão sozinho — então ele morre aqui. */
     cancelarTimer();
-    var permitirNovos = sessao.novos < NOVOS_POR_SESSAO || sessao.modo === 'revisao';
+    /* O teto de kana novos existe para não despejar 104 símbolos de uma vez,
+     * mas ele não pode congelar: numa sessão longa a cota cresce com o número
+     * de respostas, senão a pessoa moeria os mesmos 5 kana a tarde inteira. */
+    var cota = NOVOS_POR_SESSAO + Math.floor(sessao.feitas / 10);
+    var permitirNovos = sessao.novos < cota || sessao.modo === 'revisao';
     var alvo = global.App.SRS.escolher(sessao.sistema, sessao.pool, {
       evitar: sessao.recentes,
       permitirNovos: permitirNovos
@@ -356,7 +360,9 @@
         'aria-pressed': global.App.Store.escopo() === o.id ? 'true' : 'false',
         onclick: function () {
           global.App.Store.escopo(o.id);
-          sessao = sessaoPadrao();
+          /* Troca só o conjunto de kana: zerar o placar no meio da sessão
+           * porque a pessoa quis incluir os dakuten era punir sem motivo. */
+          sessao.pool = poolDoEscopo(sessao.sistema, o.id);
           proximaQuestao();
           global.App.recarregar();
         }
@@ -426,9 +432,17 @@
 
   /* Chamado quando a pessoa ENTRA na tela (não a cada redesenho). Uma sessão
    * que já terminou vira lixo: sem isto, tocar em "Praticar" na Home devolvia o
-   * resumo final da sessão anterior em vez de começar outra. */
+   * resumo final da sessão anterior em vez de começar outra.
+   *
+   * Um baralho personalizado (de uma linha, de uma música, de uma anotação) é
+   * um treino pontual: quem toca em "Praticar" na Home quer a prática geral,
+   * não voltar ao baralho da música de ontem. Ele só sobrevive à entrada que o
+   * criou. */
   function entrar() {
-    if (sessao && sessao.estado === 'fim') sessao = null;
+    if (!sessao) return;
+    if (sessao.estado === 'fim') { sessao = null; return; }
+    if (sessao.origem && !sessao.recemCriada) { sessao = null; return; }
+    sessao.recemCriada = false;
   }
 
   /* Sair da tela mata o avanço automático pendente: senão ele dispararia já em
@@ -462,16 +476,25 @@
 
   /* Baralho personalizado (linha do Estudar, kana de uma anotação, de uma música). */
   function iniciar(cfg) {
-    var sistema = global.App.Store.sistema();
-    var byKana = global.App.Kana.get(sistema).byKana;
     var vistos = {};
-    var pool = (cfg.kanas || []).map(function (k) {
-      return byKana[k] || global.App.Kana.find(k);
+    var entradas = (cfg.kanas || []).map(function (k) {
+      return global.App.Kana.find(k);
     }).filter(function (e) {
       if (!e || !e.quiz || vistos[e.kana]) return false;
       vistos[e.kana] = 1;
       return true;
     });
+
+    /* O baralho manda no silabário. Antes, praticar os kana de uma música em
+     * katakana com o app em hiragana gravava o acerto em stats.hiragana — o
+     * progresso ia para o silabário errado e nunca mais aparecia em lugar
+     * nenhum. Agora o app troca para o silabário do próprio baralho. */
+    var contagem = { hiragana: 0, katakana: 0 };
+    entradas.forEach(function (e) { contagem[e.system]++; });
+    var sistema = contagem.katakana > contagem.hiragana ? 'katakana' : 'hiragana';
+    if (global.App.Store.sistema() !== sistema) global.App.Store.sistema(sistema);
+
+    var pool = entradas.filter(function (e) { return e.system === sistema; });
 
     if (pool.length < 2) {
       global.App.UI.toast('Preciso de pelo menos 2 kana do silabário atual para montar o treino.');
@@ -484,7 +507,8 @@
       pool: pool,
       limite: cfg.limite || Math.max(8, Math.min(24, pool.length * 2))
     });
-    sessao.origem = cfg;   /* guarda a receita, para o "Fazer de novo" */
+    sessao.origem = cfg;        /* guarda a receita, para o "Fazer de novo" */
+    sessao.recemCriada = true;  /* sobrevive só à entrada que a criou */
     proximaQuestao();
     global.App.ir('praticar');
   }

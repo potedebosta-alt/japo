@@ -25,8 +25,115 @@
   }
 
   var state = base();
-  var storageOk = true;
+  var storageOk = true;      /* o navegador deixa gravar? */
+  var cotaCheia = false;     /* deixa, mas não cabe mais nada */
   var timer = null;
+  var aoFalhar = null;       /* avisa a interface quando uma gravação falha */
+  var aoMudarFora = null;    /* avisa quando OUTRA ABA alterou os dados */
+  var escritaPropria = false;
+
+  var SISTEMAS = ['hiragana', 'katakana'];
+  var ESCOPOS = ['gojuon', 'dakuten', 'tudo'];
+  var TIPOS = ['misto', 'k2r', 'r2k', 'digitar', 'audio'];
+
+  function umDe(valor, lista, padrao) {
+    return lista.indexOf(valor) === -1 ? padrao : valor;
+  }
+
+  function numero(v, minimo, maximo, padrao) {
+    var n = typeof v === 'number' ? v : parseFloat(v);
+    if (!isFinite(n)) return padrao;
+    return Math.max(minimo, Math.min(maximo, n));
+  }
+
+  function texto(v) { return typeof v === 'string' ? v : ''; }
+
+  /* Um arquivo de backup editado à mão, um dado truncado ou um erro de outra
+   * versão do app não podem deixar a pessoa com o app em branco e sem saída —
+   * ainda mais porque o botão de restaurar backup vive DENTRO de uma tela.
+   * Então tudo que entra é checado campo a campo e cai no padrão quando vem
+   * torto, em vez de explodir na primeira leitura. */
+  function saneado(bruto) {
+    var limpo = base();
+    if (!bruto || typeof bruto !== 'object') return limpo;
+
+    limpo.sistema = umDe(bruto.sistema, SISTEMAS, 'hiragana');
+    limpo.escopo = umDe(bruto.escopo, ESCOPOS, 'gojuon');
+    limpo.tipo = umDe(bruto.tipo, TIPOS, 'misto');
+
+    SISTEMAS.forEach(function (s) {
+      var origem = bruto.stats && bruto.stats[s];
+      if (!origem || typeof origem !== 'object' || Array.isArray(origem)) return;
+      Object.keys(origem).forEach(function (kana) {
+        var e = origem[kana];
+        if (!e || typeof e !== 'object') return;
+        limpo.stats[s][kana] = {
+          n: numero(e.n, 0, 1e6, 0),
+          ok: numero(e.ok, 0, 1e6, 0),
+          no: numero(e.no, 0, 1e6, 0),
+          lvl: Math.round(numero(e.lvl, 0, 7, 0)),
+          due: numero(e.due, 0, 1e15, 0),
+          last: numero(e.last, 0, 1e15, 0),
+          lastWrong: numero(e.lastWrong, 0, 1e15, 0),
+          streak: numero(e.streak, 0, 1e6, 0),
+          rt: numero(e.rt, 0, 6e5, 0),
+          hist: texto(e.hist).slice(-10),
+          conf: (e.conf && typeof e.conf === 'object' && !Array.isArray(e.conf)) ? e.conf : {}
+        };
+      });
+
+      var t = bruto.totais && bruto.totais[s];
+      if (t && typeof t === 'object') {
+        limpo.totais[s] = {
+          resp: numero(t.resp, 0, 1e9, 0),
+          certas: numero(t.certas, 0, 1e9, 0),
+          streak: numero(t.streak, 0, 1e9, 0),
+          melhor: numero(t.melhor, 0, 1e9, 0)
+        };
+      }
+    });
+
+    if (Array.isArray(bruto.notas)) {
+      limpo.notas = bruto.notas.filter(function (n) {
+        return n && typeof n === 'object';
+      }).map(function (n) {
+        return {
+          id: texto(n.id) || uid(),
+          titulo: texto(n.titulo),
+          texto: texto(n.texto),
+          sistema: umDe(n.sistema, SISTEMAS, 'hiragana'),
+          criadaEm: numero(n.criadaEm, 0, 1e15, Date.now()),
+          editadaEm: numero(n.editadaEm, 0, 1e15, Date.now()),
+          itens: Array.isArray(n.itens)
+            ? n.itens.filter(function (i) { return i && typeof i === 'object' && i.tipo; })
+            : []
+        };
+      });
+    }
+
+    if (Array.isArray(bruto.chat)) {
+      limpo.chat = bruto.chat.filter(function (m) {
+        return m && typeof m === 'object' && texto(m.texto);
+      }).map(function (m) {
+        return {
+          papel: m.papel === 'assistant' ? 'assistant' : 'user',
+          texto: texto(m.texto),
+          em: numero(m.em, 0, 1e15, Date.now())
+        };
+      }).slice(-40);
+    }
+
+    if (bruto.ajustes && typeof bruto.ajustes === 'object') {
+      limpo.ajustes = {
+        aiKey: texto(bruto.ajustes.aiKey),
+        aiModel: texto(bruto.ajustes.aiModel) || 'claude-opus-5',
+        voz: texto(bruto.ajustes.voz),
+        tema: texto(bruto.ajustes.tema) || 'auto'
+      };
+    }
+
+    return limpo;
+  }
 
   function merge(target, src) {
     if (!src || typeof src !== 'object') return target;
@@ -46,14 +153,7 @@
     try { raw = global.localStorage.getItem(KEY); } catch (e) { storageOk = false; }
     if (!raw) return;
     try {
-      var parsed = JSON.parse(raw);
-      state = merge(base(), parsed);
-      /* Arrays não passam pelo merge campo a campo. */
-      if (Array.isArray(parsed.notas)) state.notas = parsed.notas;
-      if (Array.isArray(parsed.chat)) state.chat = parsed.chat;
-      ['hiragana', 'katakana'].forEach(function (s) {
-        if (parsed.stats && parsed.stats[s]) state.stats[s] = parsed.stats[s];
-      });
+      state = saneado(JSON.parse(raw));
     } catch (e) {
       /* Dados corrompidos: recomeça em vez de travar o app. */
       state = base();
@@ -65,11 +165,18 @@
   function salvarAgora() {
     try {
       global.localStorage.setItem(KEY, JSON.stringify(state));
+      cotaCheia = false;
+      escritaPropria = true;
       return true;
     } catch (e) {
-      /* Cota cheia não significa storage bloqueado: o app continua salvando
-       * o resto normalmente depois que o usuário liberar espaço. */
-      if (!e || e.name !== 'QuotaExceededError') storageOk = false;
+      /* Cota cheia não é o mesmo que storage bloqueado, mas as duas coisas
+       * significam progresso perdido — e falhar calado é o pior desfecho
+       * possível num app que promete guardar o seu estudo. */
+      if (e && e.name === 'QuotaExceededError') cotaCheia = true;
+      else storageOk = false;
+      if (aoFalhar) {
+        try { aoFalhar(cotaCheia ? 'cheio' : 'bloqueado'); } catch (err) { /* nada */ }
+      }
       return false;
     }
   }
@@ -81,8 +188,45 @@
     timer = global.setTimeout(function () { timer = null; saveNow(); }, SAVE_DELAY);
   }
 
+  /* Duas abas abertas escreviam por cima uma da outra: cada uma tinha sua
+   * cópia do estado em memória e regravava o arquivo inteiro. Agora, quando
+   * outra aba grava, esta relê o que ficou no disco antes de escrever de novo. */
+  function ligarSincronizacaoEntreAbas() {
+    if (!global.addEventListener) return;
+    global.addEventListener('storage', function (ev) {
+      if (ev.key !== KEY || escritaPropria) { escritaPropria = false; return; }
+      if (timer) { global.clearTimeout(timer); timer = null; }
+      load();
+      if (aoMudarFora) {
+        try { aoMudarFora(); } catch (e) { /* nada */ }
+      }
+    });
+  }
+
+  /* Responder e recarregar em seguida perdia a resposta: a gravação tem 250ms
+   * de espera. Ao sair ou esconder a página, grava na hora. */
+  function ligarGravacaoAoSair() {
+    if (!global.addEventListener) return;
+    function agora() {
+      if (!timer) return;
+      global.clearTimeout(timer);
+      timer = null;
+      salvarAgora();
+    }
+    global.addEventListener('pagehide', agora);
+    global.addEventListener('beforeunload', agora);
+    global.document.addEventListener('visibilitychange', function () {
+      if (global.document.visibilityState === 'hidden') agora();
+    });
+  }
+
   function statsOf(system) {
-    if (!state.stats[system]) state.stats[system] = {};
+    /* Um backup com o tipo trocado (stats.hiragana = 7) travava a prática a
+     * cada resposta. Se não for objeto, recomeça em vez de quebrar. */
+    var atual = state.stats[system];
+    if (!atual || typeof atual !== 'object' || Array.isArray(atual)) {
+      state.stats[system] = {};
+    }
     return state.stats[system];
   }
 
@@ -102,9 +246,23 @@
   global.App = global.App || {};
   global.App.Store = {
     KEY: KEY,
-    init: function () { load(); return this; },
+    init: function () {
+      load();
+      ligarSincronizacaoEntreAbas();
+      ligarGravacaoAoSair();
+      return this;
+    },
     get state() { return state; },
-    ok: function () { return storageOk; },
+    ok: function () { return storageOk && !cotaCheia; },
+    /* 'ok' | 'bloqueado' | 'cheio' — o app precisa distinguir para explicar
+     * o que fazer: liberar espaço é diferente de sair da aba anônima. */
+    estadoArmazenamento: function () {
+      if (!storageOk) return 'bloqueado';
+      if (cotaCheia) return 'cheio';
+      return 'ok';
+    },
+    aoFalharGravacao: function (fn) { aoFalhar = fn; },
+    aoMudarEmOutraAba: function (fn) { aoMudarFora = fn; },
     save: save,
     saveNow: saveNow,
 
@@ -206,12 +364,9 @@
       /* A chave que já está neste aparelho manda: um backup não sobrescreve
        * (nem apaga) a credencial de quem está importando. */
       var chaveLocal = state.ajustes && state.ajustes.aiKey;
-      state = merge(base(), parsed);
-      if (Array.isArray(parsed.notas)) state.notas = parsed.notas;
-      if (Array.isArray(parsed.chat)) state.chat = parsed.chat;
-      ['hiragana', 'katakana'].forEach(function (s) {
-        if (parsed.stats[s]) state.stats[s] = parsed.stats[s];
-      });
+      /* Mesmo saneamento da carga: um arquivo torto não pode deixar o app
+       * em branco justamente na tela onde fica o botão de restaurar. */
+      state = saneado(parsed);
       if (chaveLocal) state.ajustes.aiKey = chaveLocal;
       saveNow();
     },
